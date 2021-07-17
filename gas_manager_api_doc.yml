@@ -1,0 +1,1194 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based coping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "1.1.0"
+  title: E-Commerce Cargamos API Manager
+  description: |
+    </br>
+    API to Manage E-Commerce Products/Stores.
+    CRUD functions can be applied to manage the data.
+    </br>
+    </br>
+  contact: 
+      name: API Support
+      url: https://github.com/jorgeMorfinezM/cargamos_api_test/blob/main/README.md
+      email: jorge.morfinez.m@gmail.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  
+host:
+  cargamos-api-test.herokuapp.com
+basePath: "/api/ecommerce"
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+#components:
+#    securitySchemes:
+#    bearerAuth:
+#      type: https
+#      scheme: bearer
+#      bearerFormat: JWT
+securityDefinitions:
+  OAuth2:
+    description: Contiene la llamada a autenticar la API para obtener el Bearer Token
+    type: oauth2
+    flow: accessCode
+    authorizationUrl: https://cargamos-api-test.herokuapp.com/api/ecommerce/authorization/
+    tokenUrl: https://cargamos-api-test.herokuapp.com/api/ecommerce/authorization/
+
+# Describe your paths here
+tags:
+  - name: "Search Stock by Product and Store"
+    description: "Endpoint to looking for stock data by sku and code store defined"
+  - name: "Search Total Stock by Product"
+    description: "Endpoint to looking for stock data by sku defined"
+  - name: "Add Stock by Product"
+    description: "Update stock in product by SKU and Store Code"
+  - name: "Manage Stores"
+    description: "Endpoint to manage Store data using: add, get, delete and update methods to and from the database"
+  - name: "Manage Products"
+    description: "Endpoint to manage product data using: add, get, delete and update methods to and from the database"
+  - name: "Authorization"
+    description: "Endpoint to get Token Bearer POST the username and password registered"
+paths:
+  /stock/detail/:
+    get:
+      tags:
+        - "Search Stock by Product and Store"
+      description:
+        Get the data of stock looking for by Product and Store.
+      parameters:
+        - name: SearchStock
+          in: body
+          description: Payload get the list of the Stock by SKU and Store Code.
+          required: true
+          schema:
+            $ref: '#/definitions/SearchStock'
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ProductStock'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  /stock/total/:
+    get:
+      tags:
+        - "Search Total Stock by Product"
+      description:
+        Get the data of stock in all Stores by SKU.
+      parameters:
+        - name: SearchTotalStock
+          in: body
+          description: Payload get the list of all stocks the product.
+          required: true
+          schema:
+            $ref: '#/definitions/SearchTotalStock'
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ProductStock'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  /stock/add/:
+    get:
+      tags:
+        - "Add Stock by Product"
+      description:
+        Get the data of stock in all Stores by SKU.
+      parameters:
+        - name: AddStock
+          in: body
+          description: Payload get the list of all stocks the product.
+          required: true
+          schema:
+            $ref: '#/definitions/AddStock'
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/StockAdded'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  /manage/store/:
+    # This is a HTTP operation
+    get:
+      tags:
+        - "Manage Stores"
+      description:
+        Get the Store data from code.
+      # This is array of GET operation parameters:
+      parameters:
+        - name: SearchStoreCode
+          in: body
+          description: Payload to get the data of a Store data by Code.
+          required: true
+          schema:
+            $ref: '#/definitions/SearchStoreCode'
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/StoreData'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    post:
+      tags:
+        - "Manage Stores"
+      description:
+        Add Store data to register a new Store.
+      parameters:
+        - name: postStore
+          in: body
+          description: Payload to insert a store record in database.
+          required: true
+          schema:
+            $ref: '#/definitions/postStore'
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PostStoreResponse'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    put:
+      tags:
+        - "Manage Stores"
+      description:
+        Updates the Store data of a particular record in the database.
+      parameters:
+        - name: putStore
+          in: body
+          description: Payload to update store valid data.
+          required: true
+          schema:
+            $ref: '#/definitions/putStore'
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PutStoreResponse'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    delete:
+      tags:
+        - "Manage Stores"
+      description:
+        Deletes a record of a Store from the database.
+      parameters:
+        - name: deleteStore
+          in: body
+          description: Payload to looking for and delete a specific record.
+          required: true
+          schema:
+            $ref: '#/definitions/deleteStore'
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/deleteStoreResponse'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  /manage/product/:
+    # This is a HTTP operation
+    get:
+      tags:
+        - "Manage Products"
+      description:
+        Get the product data from sku.
+      # This is array of GET operation parameters:
+      parameters:
+        - name: SearchProductSku
+          in: body
+          description: Payload to get the data of a Store data by Code.
+          required: true
+          schema:
+            $ref: '#/definitions/SearchProductSku'
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ProductData'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    post:
+      tags:
+        - "Manage Products"
+      description:
+        Add product data to register a new product.
+      parameters:
+        - name: postProduct
+          in: body
+          description: Payload to insert a store record in database.
+          required: true
+          schema:
+            $ref: '#/definitions/postProduct'
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ProductData'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    put:
+      tags:
+        - "Manage Products"
+      description:
+        Updates the product data of a particular record in the database.
+      parameters:
+        - name: putProduct
+          in: body
+          description: Payload to update product valid data.
+          required: true
+          schema:
+            $ref: '#/definitions/putProduct'
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ProductData'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+    delete:
+      tags:
+        - "Manage Products"
+      description:
+        Deletes a record of a Product from the database.
+      parameters:
+        - name: deleteProduct
+          in: body
+          description: Payload to looking for and delete a specific record.
+          required: true
+          schema:
+            $ref: '#/definitions/deleteProduct'
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/deleteProductResponse'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+  /authorization/:
+    post:
+      tags:
+        - "Authorization"
+      description:
+        Get Bearer Token by username, password and RFC user to authenticate to the API endpoints.
+      parameters:
+        - name: Authorization
+          in: body
+          description: Payload with authentication credentials to API.
+          required: true
+          schema:
+            $ref: '#/definitions/Authorization'
+      responses:
+        200:
+          description: Successful response Token Bearer
+          schema:
+            title: TokenRequest
+            type: array
+            items:
+              $ref: '#/definitions/TokenRequest'
+        404:
+          description: Page Not Found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: Request Data Conflict
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        401:
+          description: 401 Unauthorized
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
+
+definitions:
+  SearchStock:
+    allOf:
+      - $ref: '#/definitions/SearchStock'
+      - required:
+        - product_sku
+        - store_code
+        type: "object"
+        properties:
+          product_sku:
+            type: string
+          store_code:
+            type: string
+
+  ProductStock:
+    allOf:
+      - $ref: '#/definitions/ProductStock'
+      - required:
+        - CodeStore
+        - NameStore
+        - SKU
+        - Stock
+        type: "object"
+        properties:
+          CodeStore:
+            type: string
+          NameStore:
+            type: string
+          SKU:
+            type: string
+          Stock:
+            type: integer
+            format: int64
+
+  SearchTotalStock:
+    allOf:
+      - $ref: '#/definitions/SearchTotalStock'
+      - required:
+        - product_sku
+        type: "object"
+        properties:
+          product_sku:
+            type: string
+
+  AddStock:
+    allOf:
+      - $ref: '#/definitions/AddStock'
+      - required:
+        - product_sku
+        - store_code
+        - stock
+        type: "object"
+        properties:
+          product_sku:
+            type: string
+          store_code:
+            type: string
+          stock:
+            type: integer
+            format: int64
+
+  StockAdded:
+    allOf:
+      - $ref: '#/definitions/StockAdded'
+      - required:
+        - StoreCode
+        - ProductSku
+        - ProductStock
+        - LastUpdateDate
+        - Message
+        type: "object"
+        properties:
+          StoreCode:
+            type: string
+          ProductSku:
+            type: string
+          ProductStock:
+            type: integer
+            format: int64
+          LastUpdateDate:
+            type: string
+          Message:
+            type: string
+
+  SearchStoreCode:
+    allOf:
+      - $ref: '#/definitions/SearchStoreCode'
+      - required:
+        - store_code
+        type: "object"
+        properties:
+          store_code:
+            type: string
+
+  StoreData:
+    allOf:
+        - $ref: '#/definitions/StoreData'
+        - required:
+          - IdStore
+          - CodeStore
+          - NameStore
+          - AddressStore
+          - MinimumStock
+          - CreationDate
+          - LastUpdateDate
+          type: "object"
+          properties:
+            IdStore:
+              type: string
+            CodeStore:
+              type: string
+            NameStore:
+              type: string
+            AddressStore:
+              type: string
+            MinimumStock:
+              type: string
+            CreationDate:
+              type: string
+            LastUpdateDate:
+              type: string
+
+  postStore:
+    allOf:
+      - $ref: '#/definitions/postStore'
+      - required:
+        - store_code
+        - store_name
+        - street_address
+        - external_number_address
+        - suburb_address
+        - city_address
+        - country_address
+        - zip_postal_code_address
+        - minimum_inventory
+        type: "object"
+        properties:
+          store_code:
+            type: string
+          store_name:
+            type: string
+          street_address:
+            type: string
+          external_number_address:
+            type: string
+          suburb_address:
+            type: string
+          city_address:
+            type: string
+          country_address:
+            type: string
+          zip_postal_code_address:
+            type: string
+          minimum_inventory:
+            type: integer
+            format: int64
+
+  PostStoreResponse:
+    allOf:
+      - $ref: '#/definitions/PostStoreResponse'
+      - required:
+        - IdStore
+        - CodeStore
+        - NameStore
+        - AddressStore
+        - MinimumStock
+        - CreationDate
+        - Message
+        type: "object"
+        properties:
+          IdStore:
+            type: string
+          CodeStore:
+            type: string
+          NameStore:
+            type: string
+          AddressStore:
+            type: string
+          MinimumStock:
+            type: string
+          CreationDate:
+            type: string
+          Message:
+            type: string
+
+  putStore:
+    allOf:
+      - $ref: '#/definitions/putStore'
+      - required:
+        - store_code
+        - store_name
+        - street_address
+        - external_number_address
+        - suburb_address
+        - city_address
+        - country_address
+        - zip_postal_code_address
+        - minimum_inventory
+        type: "object"
+        properties:
+          store_code:
+            type: string
+          store_name:
+            type: string
+          street_address:
+            type: string
+          external_number_address:
+            type: string
+          suburb_address:
+            type: string
+          city_address:
+            type: string
+          country_address:
+            type: string
+          zip_postal_code_address:
+            type: string
+          minimum_inventory:
+            type: integer
+            format: int64
+
+  PutStoreResponse:
+    allOf:
+      - $ref: '#/definitions/PutStoreResponse'
+      - required:
+        - IdStore
+        - CodeStore
+        - NameStore
+        - AddressStore
+        - MinimumStock
+        - LastUpdateDate
+        - Message
+        type: "object"
+        properties:
+          IdStore:
+            type: string
+          CodeStore:
+            type: string
+          NameStore:
+            type: string
+          AddressStore:
+            type: string
+          MinimumStock:
+            type: string
+          LastUpdateDate:
+            type: string
+          Message:
+            type: string
+
+  deleteStore:
+    allOf:
+      - $ref: '#/definitions/deleteStore'
+      - required:
+        - store_code
+        type: "object"
+        properties:
+          store_code:
+            type: string
+
+  deleteStoreResponse:
+    allOf:
+      - $ref: '#/definitions/deleteStoreResponse'
+      - required:
+        - IdStore
+        - CodeStore
+        - Message
+        type: "object"
+        properties:
+          IdStore:
+            type: string
+          CodeStore:
+            type: string
+          Message:
+            type: string
+
+  SearchProductSku:
+    allOf:
+      - $ref: '#/definitions/SearchProductSku'
+      - required:
+        - product_sku
+        type: "object"
+        properties:
+          product_sku:
+            type: string
+
+  ProductData:
+    allOf:
+      - $ref: '#/definitions/ProductData'
+      - required:
+        - IdProduct
+        - SKUProduct
+        - UNSPC
+        - NameProduct
+        - TitleProduct
+        - BrandProduct
+        - UOMProduct
+        - CategoryIdProduct
+        - ParentCategoryIdProduct
+        - StockProduct
+        - CodeStore
+        - NameStore
+        - LongDescriptionProduct
+        - PhotoProduct
+        - PriceProduct
+        - TaxPriceProduct
+        - CurrencyPriceProduct
+        - StatusProduct
+        - PublishedProduct
+        - ManageStockProduct
+        - LengthProduct
+        - WidthProduct"
+        - HeightProduct
+        - WeightProduct
+        - CreationDate
+        - LastUpdateDate
+        type: "object"
+        properties:
+          IdProduct:
+            type: string
+          SKUProduct:
+            type: string
+          UNSPC:
+            type: string
+          NameProduct:
+            type: string
+          TitleProduct:
+            type: string
+          BrandProduct:
+            type: string
+          UOMProduct:
+            type: string
+          CategoryIdProduct:
+            type: string
+          ParentCategoryIdProduct:
+            type: string
+          StockProduct:
+            type: string
+          CodeStore:
+            type: string
+          NameStore:
+            type: string
+          LongDescriptionProduct:
+            type: string
+          PhotoProduct:
+            type: string
+          PriceProduct:
+            type: string
+          TaxPriceProduct:
+            type: string
+          CurrencyPriceProduct:
+            type: string
+          StatusProduct:
+            type: string
+          PublishedProduct:
+            type: string
+          ManageStockProduct:
+            type: string
+          LengthProduct:
+            type: string
+          WidthProduct:
+            type: string
+          HeightProduct:
+            type: string
+          WeightProduct:
+            type: string
+          CreationDate:
+            type: string
+          LastUpdateDate:
+            type: string
+
+  postProduct:
+    allOf:
+      - $ref: '#/definitions/postProduct'
+      - required:
+        - product_sku
+        - product_unspc
+        - product_brand
+        - category_id
+        - parent_category_id
+        - unit_of_measure
+        - product_stock
+        - product_store_code
+        - product_name
+        - product_title
+        - product_long_description
+        - product_photo
+        - product_price
+        - product_tax
+        - product_currency
+        - product_status
+        - product_published
+        - product_manage_stock
+        - product_length
+        - product_width
+        - product_height
+        - product_weight
+        type: "object"
+        properties:
+          product_sku:
+            type: string
+          product_unspc:
+            type: string
+          product_brand:
+            type: string
+          category_id:
+            type: string
+          parent_category_id:
+            type: string
+          unit_of_measure:
+            type: string
+          product_stock:
+            type: integer
+            format: int64
+          product_store_code:
+            type: string
+          product_name:
+            type: string
+          product_title:
+            type: string
+          product_long_description:
+            type: string
+          product_photo:
+            type: string
+          product_price:
+            type: string
+          product_tax:
+            type: string
+          product_currency:
+            type: string
+          product_status:
+            type: string
+          product_published:
+            type: string
+          product_manage_stock:
+            type: string
+          product_length:
+            type: string
+          product_width:
+            type: string
+          product_height:
+            type: string
+          product_weight:
+            type: string
+
+  putProduct:
+    allOf:
+      - $ref: '#/definitions/putProduct'
+      - required:
+        - product_sku
+        - category_id
+        - parent_category_id
+        - product_stock
+        - product_store_code
+        - product_name
+        - product_title
+        - product_long_description
+        - product_photo
+        - product_price
+        - product_tax
+        - product_currency
+        - product_status
+        - product_published
+        - product_manage_stock
+        type: "object"
+        properties:
+          product_sku:
+            type: string
+          category_id:
+            type: string
+          parent_category_id:
+            type: string
+          product_stock:
+            type: integer
+            format: int64
+          product_store_code:
+            type: string
+          product_name:
+            type: string
+          product_title:
+            type: string
+          product_long_description:
+            type: string
+          product_photo:
+            type: string
+          product_price:
+            type: string
+          product_tax:
+            type: string
+          product_currency:
+            type: string
+          product_status:
+            type: string
+          product_published:
+            type: string
+          product_manage_stock:
+            type: string
+
+  deleteProduct:
+    allOf:
+      - $ref: '#/definitions/deleteProduct'
+      - required:
+        - product_sku
+        - store_code
+        type: "object"
+        properties:
+          product_sku:
+            type: string
+          store_code:
+            type: string
+
+  deleteProductResponse:
+    allOf:
+      - $ref: '#/definitions/deleteProductResponse'
+      - required:
+        - IdProduct
+        - SKUProduct
+        - StoreCode
+        - Message
+        type: "object"
+        properties:
+          IdProduct:
+            type: string
+          SKUProduct:
+            type: string
+          StoreCode:
+            type: string
+          Message:
+            type: string
+
+  Error:
+    allOf:
+      - $ref: '#/definitions/Error'
+      - required:
+        - error_code
+        - error_message
+        type: "object"
+        properties:
+          error_code:
+            type: integer
+            format: int32
+          error_message:
+            type: string
+
+  Authorization:
+    allOf:
+      - $ref: '#/definitions/Authorization'
+      - required:
+        - username
+        - password
+        - rfc_client
+        type: "object"
+        properties:
+          username:
+            type: string
+          password:
+            type: string
+          rfc_client:
+            type: string
+
+  TokenRequest:
+    allOf:
+      - $ref: '#/definitions/TokenRequest'
+      - required:
+        - message
+        - access_token
+        - refresh_token
+        type: "object"
+        properties:
+          message: 
+            type: string
+          access_token:
+            type: string
+          refresh_token:
+            type: string
