@@ -83,6 +83,7 @@ class DbConstants(Constants):
     gas_service_vehicle_table = str()  # GAS_SERVICIO_VEHICULO
     gas_odometer_vehicle_table = str() # GAS_ODOMETRO_VEHICULO
     gas_manager_vehicle_table = str()  # GAS_GASOLINA_VEHICULO
+    gas_user_role_table = str()        # GAS_USER_ROLE
 
     def __init__(self):
         super().__init__()
@@ -93,6 +94,7 @@ class DbConstants(Constants):
         self.gas_service_vehicle_table = os.getenv('GAS_SERVICIO_VEHICULO').__str__()
         self.gas_odometer_vehicle_table = os.getenv('GAS_ODOMETRO_VEHICULO').__str__()
         self.gas_manager_vehicle_table = os.getenv('GAS_GASOLINA_VEHICULO').__str__()
+        self.gas_user_role_table = os.getenv('GAS_USER_ROLE').__str__()
 
     class GasVehicle:
 
@@ -154,6 +156,7 @@ class DbConstants(Constants):
         driver_date_assignment = str()  # CONDUCTOR_DATE_ASSIGNMENT
         driver_status = str()           # CONDUCTOR_ESTATUS
         driver_vehicle_id = int()       # CONDUCTOR_VEHICULO_ID
+        driver_role_id = int()          # CONDUCTOR_USUARIO_ROL
 
         def __init__(self):
 
@@ -165,6 +168,7 @@ class DbConstants(Constants):
             self.driver_date_assignment = os.getenv('CONDUCTOR_DATE_ASSIGNMENT').__str__()
             self.driver_status = os.getenv('CONDUCTOR_ESTATUS').__str__()
             self.driver_vehicle_id = os.getenv('CONDUCTOR_VEHICULO_ID').__str__()
+            self.driver_role_id = os.getenv('CONDUCTOR_USUARIO_ROL').__str__()
 
     class GasDocument:
 
@@ -273,3 +277,14 @@ class DbConstants(Constants):
             self.gas_driver_id = os.getenv('GASOLINA_CONDUCTOR_ID').__str__()
             self.gas_vehicle_id = os.getenv('GASOLINA_VEHICULO_ID').__str__()
             self.gas_document_id = os.getenv('GASSOLINA_DOCUMENTO_ID').__str__()
+
+    class UserRole:
+
+        user_role_id = int()      # ROL_USUARIO_ID
+        user_role_name = str()    # ROL_USUARIO_NOMBRE
+        user_role_status = str()  # ROL_USUARIO_ESTATUS
+
+        def __init__(self):
+            self.user_role_id = os.getenv('ROL_USUARIO_ID').__str__()
+            self.user_role_name = os.getenv('ROL_USUARIO_NOMBRE').__str__()
+            self.user_role_status = os.getenv('ROL_USUARIO_ESTATUS').__str__()

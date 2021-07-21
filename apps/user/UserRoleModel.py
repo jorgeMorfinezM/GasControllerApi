@@ -28,8 +28,6 @@ import json
 import logging
 from datetime import datetime
 from pytz import timezone
-from apps.vehicle.VehicleModel import VehicleModel
-from apps.user.UserRoleModel import UserRoleModel
 from sqlalchemy_filters import apply_filters
 from sqlalchemy import Column, Numeric, Integer, String, Date, Time, Sequence
 from db_controller.database_backend import *
@@ -37,10 +35,10 @@ from db_controller import mvc_exceptions as mvc_exc
 
 cfg_db = get_config_settings_db()
 
-DRIVER_ID_SEQ = Sequence('driver_seq')  # define sequence explicitly
+USER_ROLE_ID_SEQ = Sequence('user_role_seq')  # define sequence explicitly
 
 
-class DriverModel(Base):
+class UserRoleModel(Base):
     r"""
     Class to instance the data of DriverModel on the database.
     Transactions:
@@ -50,50 +48,16 @@ class DriverModel(Base):
      - Select:
     """
 
-    __tablename__ = cfg_db.gas_driver_table.__str__()
+    __tablename__ = cfg_db.gas_user_role_table.__str__()
 
-    driver_id = Column(cfg_db.GasDriver.driver_id, Integer, DRIVER_ID_SEQ,
-                       primary_key=True, server_default=DRIVER_ID_SEQ.next_value())
-    driver_name = Column(cfg_db.GasDriver.driver_name, String, nullable=False)
-    driver_last_name = Column(cfg_db.GasDriver.driver_lastname1, String, nullable=False)
-    driver_last_name_last = Column(cfg_db.GasDriver.driver_lastname2, String, nullable=True)
-    driver_address = Column(cfg_db.GasDriver.driver_address, String, nullable=True)
-    driver_registered = Column(cfg_db.GasDriver.driver_date_assignment, Date, nullable=False)
-    driver_status = Column(cfg_db.GasDriver.driver_status, String, nullable=False)
-    last_update_date = Column('last_update_date', Date, nullable=True)
-
-    vehicle_assignment = Column(
-        cfg_db.GasDriver.driver_vehicle_id,
-        Integer,
-        ForeignKey('VehicleModel.vehicle_id', onupdate='CASCADE', ondelete='CASCADE'),
-        nullable=True,
-        unique=True
-        # no need to add index=True, all FKs have indexes
-    )
-
-    vehicle = relationship(VehicleModel,
-                           backref=cfg_db.gas_vehicle_table.__str__())
-
-    role_user = Column(
-        cfg_db.GasDriver.driver_role_id,
-        Integer,
-        ForeignKey('UserRoleModel.user_rol_id', onupdate='CASCADE', ondelete='CASCADE'),
-        nullable=False,
-        unique=True
-    )
-
-    driver_role = relationship(UserRoleModel,
-                               backref=cfg_db.gas_user_role_table)
+    user_role_id = Column(cfg_db.UserRole.user_role_id, Integer, USER_ROLE_ID_SEQ,
+                          primary_key=True, server_default=USER_ROLE_ID_SEQ.next_value())
+    user_role_name = Column(cfg_db.UserRole.user_role_name, String, nullable=False)
+    user_role_status = Column(cfg_db.UserRole.user_role_status, String, nullable=False)
 
     def __init__(self, data_driver):
-        self.driver_name = data_driver.get('nombre_conductor')
-        self.driver_last_name = data_driver.get('apellido_paterno_conductor')
-        self.driver_last_name_last = data_driver.get('apellido_materno_conductor')
-        self.driver_address = data_driver.get('domicilio_conductor')
-        self.driver_status = data_driver.get('estatus_conductor')
-        # self.driver_registered = get_current_date(session)
-        self.vehicle_assignment = data_driver.get('vehiculo')
-        self.role_user = data_driver.get('rol_usuario')
+        self.user_role_name = data_driver.get('nombre_rol')
+        self.user_role_status = data_driver.get('estatus_rol')
 
     def check_if_row_exists(self, session, data):
         """
