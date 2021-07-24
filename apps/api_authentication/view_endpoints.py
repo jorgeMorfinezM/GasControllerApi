@@ -25,7 +25,7 @@ from utilities.Utility import *
 from datetime import datetime
 
 cfg_app = get_config_settings_app()
-authorization_api = Blueprint('authorization_api', __name__)
+authorization_api = Blueprint('authorization_api', __name__, url_prefix='/auth')
 # jwt = JWTManager(bancos_api)
 logger = configure_logger('ws')
 

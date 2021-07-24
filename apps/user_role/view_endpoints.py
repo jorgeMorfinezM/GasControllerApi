@@ -13,7 +13,7 @@ __version__ = "1.21.G02.1 ($Rev: 2 $)"
 from flask import Blueprint, json, request
 # from flask_jwt_extended import jwt_required
 from db_controller.database_backend import *
-from .VehicleModel import VehicleModel
+from .UserRoleModel import UserRoleModel
 from handler_controller.ResponsesHandler import ResponsesHandler as HandlerResponse
 from handler_controller.messages import SuccessMsg, ErrorMsg
 from logger_controller.logger_control import *
@@ -21,14 +21,14 @@ from utilities.Utility import *
 from datetime import datetime
 
 cfg_app = get_config_settings_app()
-vehicle_api = Blueprint('vehicle_api', __name__)
+user_role_api = Blueprint('user_role_api', __name__, url_prefix='/role')
 # jwt = JWTManager(bancos_api)
 logger = configure_logger('ws')
 
 
-@vehicle_api.route('/', methods=['POST', 'PUT', 'GET', 'DELETE'])
+@user_role_api.route('/', methods=['POST', 'PUT', 'GET', 'DELETE'])
 # @jwt_required
-def endpoint_manage_vehicle_data():
+def endpoint_manage_user_role_data():
     conn_db, session_db = init_db_connection()
 
     headers = request.headers
@@ -200,34 +200,3 @@ def endpoint_manage_vehicle_data():
 
     else:
         return HandlerResponse.not_found(ErrorMsg.ERROR_REQUEST_NOT_FOUND)
-
-
-@vehicle_api.route('/filter', methods=['GET'])
-def endpoint_looking_for_vehicle():
-    conn_db, session_db = init_db_connection()
-
-    headers = request.headers
-    # auth = headers.get('Authorization')
-
-    # if not auth and 'Bearer' not in auth:
-    #     return HandlerResponse.request_unauthorized()
-    # else:
-
-    if request.method == 'GET':
-        # GUARDAR DATOS DE INVERSIONES
-
-        data = request.get_json(force=True)
-
-        gin_inv_model = GinInversionesModel(data)
-
-        if not data or str(data) is None:
-            return HandlerResponse.request_conflict(ErrorMsg.ERROR_REQUEST_DATA_CONFLICT)
-
-        logger.info('Data Json Inversion to Manage on DB: %s', str(data))
-
-        json_inversion_added = gin_inv_model.save_inversion(session_db, data)
-
-        if not json_inversion_added:
-            return HandlerResponse.resp_success(SuccessMsg.MSG_RECORD_REGISTERED, {})
-
-        return HandlerResponse.resp_success(SuccessMsg.MSG_CREATED_RECORD, json_inversion_added)

@@ -578,7 +578,7 @@ paths:
       tags:
         - "Authorization"
       description:
-        Get Bearer Token by username, password and RFC user to authenticate to the API endpoints.
+        Get Bearer Token by username, password and RFC user_role to authenticate to the API endpoints.
       parameters:
         - name: Authorization
           in: body

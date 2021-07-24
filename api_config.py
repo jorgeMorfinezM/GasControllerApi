@@ -15,10 +15,10 @@ import time
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from apps.api_authentication.view_endpoints import authorization_api
-from apps.bancos.view_endpoints import bancos_api
-from apps.credenciales.view_endpoints import credenciales_api
-from apps.vehicle.view_endpoints import inversiones_api
-from apps.robot_bancario.view_endpoints import robot_api
+from apps.user_role.view_endpoints import user_role_api
+from apps.driver.view_endpoints import driver_api
+from apps.vehicle.view_endpoints import vehicle_api
+from apps.gasoline.view_endpoints import gas_log_api
 # from db_controller.database_backend import *
 from utilities.Utility import *
 
@@ -42,17 +42,20 @@ def create_app():
     app_api.config['SQLALCHEMY_DATABASE_URI'] = cfg_db.Development.SQLALCHEMY_DATABASE_URI.__str__()
 
     # USER URL
-    app_api.register_blueprint(authorization_api, url_prefix='/api/v1/manager/user/')
+    app_api.register_blueprint(authorization_api, url_prefix='/api/v1/manager')
 
-    # CREDENCIALES URL
-    app_api.register_blueprint(credenciales_api, url_prefix='/api/v1/bancos/<int:IdBanco>/credenciales/')
+    # USER ROLE
+    app_api.register_blueprint(user_role_api, user_role_api='/api/v1/manager/user')
 
-    # INVERSIONES URL
-    app_api.register_blueprint(inversiones_api, url_prefix='/api/v1/vehicle/')
-    app_api.register_blueprint(inversiones_api, url_prefix='/api/v1/vehicle/flujo/datos/')
+    # DRIVER URL
+    app_api.register_blueprint(driver_api, url_prefix='/api/v1/manager/gas/driver/')
 
-    # # ROBOT CONFIGURATION URL
-    app_api.register_blueprint(robot_api, url_prefix='/api/v1/bancos/<int:IdBanco>/robot/configuraciones/')
+    # VEHICLE URL
+    app_api.register_blueprint(vehicle_api, url_prefix='/api/v1/manager/gas/vehicle/')
+    # app_api.register_blueprint(vehicle_api, url_prefix='/api/v1/manager/gas/vehicle/flujo/datos/')
+
+    # GASOLINE REGISTER URL
+    app_api.register_blueprint(gas_log_api, url_prefix='/api/v1/manager/gas/vehicle/gasoline')
 
     jwt = JWTManager(app_api)
 

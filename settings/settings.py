@@ -99,6 +99,7 @@ class DbConstants(Constants):
     class GasVehicle:
 
         vehiculo_id = int()                # VEHICULO_ID
+        vehiculo_fabricante = str()        # VEHICULO_FABRICANTE
         vehiculo_modelo = str()            # VEHICULO_MODELO
         vehiculo_marca = str()             # VEHICULO_MARCA
         vehiculo_matricula = str()         # VEHICULO_MATRICULA
@@ -124,6 +125,7 @@ class DbConstants(Constants):
         def __init__(self):
 
             self.vehiculo_id = os.getenv('VEHICULO_ID').__str__()
+            self.vehiculo_fabricante = os.getenv('VEHICULO_FABRICANTE').__str__()
             self.vehiculo_modelo = os.getenv('VEHICULO_MODELO').__str__()
             self.vehiculo_marca = os.getenv('VEHICULO_MARCA').__str__()
             self.vehiculo_matricula = os.getenv('VEHICULO_MATRICULA').__str__()
@@ -252,17 +254,18 @@ class DbConstants(Constants):
 
     class GasManager:
 
-        gas_registro_id = int()         # GASOLINA_REGISTRO_ID
-        gas_registro_date = str()       # GASOLINA_REGISTRO_FECHA
-        gas_registro_hour = str()       # GASOLINA_REGISTRO_HORA
-        gas_registro_liters = float()   # GASOLINA_REGISTRO_LITROS
-        gas_registro_cost = float()     # GASOLINA_REGISTRO_COSTO
-        gas_registro_tax_rate = int()   # GASOLINA_REGISTRO_IMPUESTO
-        gas_gasolinera_name = str()     # GASOLINA_NOMBRE_GASOLINERA
-        gas_gasolinera_address = str()  # GASOLINA_UBICACION_GASOLINERA
-        gas_driver_id = int()           # GASOLINA_CONDUCTOR_ID
-        gas_vehicle_id = int()          # GASOLINA_VEHICULO_ID
-        gas_document_id = int()         # GASSOLINA_DOCUMENTO_ID
+        gas_registro_id = int()           # GASOLINA_REGISTRO_ID
+        gas_registro_date = str()         # GASOLINA_REGISTRO_FECHA
+        gas_registro_hour = str()         # GASOLINA_REGISTRO_HORA
+        gas_registro_liters = float()     # GASOLINA_REGISTRO_LITROS
+        gas_registro_cost = float()       # GASOLINA_REGISTRO_COSTO
+        gas_registro_tax_rate = int()     # GASOLINA_REGISTRO_IMPUESTO
+        gas_registro_unit_cost = float()  # GASOLINA_REGISTRO_UNIT_COST
+        gas_gasolinera_name = str()       # GASOLINA_NOMBRE_GASOLINERA
+        gas_gasolinera_address = str()    # GASOLINA_UBICACION_GASOLINERA
+        gas_driver_id = int()             # GASOLINA_CONDUCTOR_ID
+        gas_vehicle_id = int()            # GASOLINA_VEHICULO_ID
+        gas_document_id = int()           # GASSOLINA_DOCUMENTO_ID
 
         def __init__(self):
 
@@ -272,6 +275,7 @@ class DbConstants(Constants):
             self.gas_registro_liters = os.getenv('GASOLINA_REGISTRO_LITROS').__str__()
             self.gas_registro_cost = os.getenv('GASOLINA_REGISTRO_COSTO').__str__()
             self.gas_registro_tax_rate = os.getenv('GASOLINA_REGISTRO_IMPUESTO').__str__()
+            self.gas_registro_unit_cost = os.getenv('GASOLINA_REGISTRO_UNIT_COST').__str__()
             self.gas_gasolinera_name = os.getenv('GASOLINA_NOMBRE_GASOLINERA').__str__()
             self.gas_gasolinera_address = os.getenv('GASOLINA_UBICACION_GASOLINERA').__str__()
             self.gas_driver_id = os.getenv('GASOLINA_CONDUCTOR_ID').__str__()

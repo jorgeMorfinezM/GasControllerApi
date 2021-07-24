@@ -272,8 +272,8 @@ class UsersAuth(Base):
     r"""
     Class to instance User data to authenticate the API.
     Transactions:
-     - Insert: Add user data to the database if not exists.
-     - Update: Update user data on the database if exists.
+     - Insert: Add user_role data to the database if not exists.
+     - Update: Update user_role data on the database if exists.
     """
 
     cfg_db = get_config_constant_file()
@@ -313,13 +313,13 @@ class UsersAuth(Base):
             )
 
 
-# Transaction to looking for a user on db to authenticate
+# Transaction to looking for a user_role on db to authenticate
 def validate_user_exists(user_name):
     r"""
-    Looking for a user by name on the database to valid authentication.
+    Looking for a user_role by name on the database to valid authentication.
 
-    :param user_name: The user name to valid authentication on the API.
-    :return result: Boolean to valid if the user name exists to authenticate the API.
+    :param user_name: The user_role name to valid authentication on the API.
+    :return result: Boolean to valid if the user_role name exists to authenticate the API.
     """
 
     cfg = get_config_constant_file()
@@ -342,12 +342,12 @@ def validate_user_exists(user_name):
     return result
 
 
-# Transaction to update user' password  hashed on db to authenticate
+# Transaction to update user_role' password  hashed on db to authenticate
 def update_user_password_hashed(user_name, password_hash):
     r"""
-    Transaction to update password hashed of a user to authenticate on the API correctly.
+    Transaction to update password hashed of a user_role to authenticate on the API correctly.
 
-    :param user_name: The user name to update password hashed.
+    :param user_name: The user_role name to update password hashed.
     :param password_hash: The password hashed to authenticate on the API.
     """
 
@@ -376,11 +376,11 @@ def update_user_password_hashed(user_name, password_hash):
 
 def insert_user_authenticated(user_id, user_name, user_password, password_hash):
     r"""
-    Transaction to add a user data to authenticate to API, inserted on the db.
+    Transaction to add a user_role data to authenticate to API, inserted on the db.
 
-    :param user_id: The Id of the user to add on the db.
-    :param user_name: The user name of the user to add on the db.
-    :param user_password:  The password od the user to add on the db.
+    :param user_id: The Id of the user_role to add on the db.
+    :param user_name: The user_role name of the user_role to add on the db.
+    :param user_password:  The password od the user_role to add on the db.
     :param password_hash: The password hashed to authenticate on the API.
     """
 
@@ -423,13 +423,13 @@ def get_data_user_authentication(session, table_name, user_name):
 
         user_auth_db = session.execute(sql_user_data)
 
-        for user in user_auth_db:
-            if user is not None:
+        for user_role in user_auth_db:
+            if user_role is not None:
 
-                user_name_db = user['username']
-                user_password_db = user['password']
-                password_hash = user['password_hash']
-                last_update_date = datetime.strptime(str(user['last_update_date']), "%Y-%m-%d")
+                user_name_db = user_role['username']
+                user_password_db = user_role['password']
+                password_hash = user_role['password_hash']
+                last_update_date = datetime.strptime(str(user_role['last_update_date']), "%Y-%m-%d")
 
                 user_auth += [{
                     "username": user_name_db,

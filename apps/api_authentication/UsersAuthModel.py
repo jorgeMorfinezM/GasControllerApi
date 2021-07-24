@@ -41,8 +41,8 @@ class UsersAuthModel(Base):
     r"""
     Class to instance User data to authenticate the API.
     Transactions:
-     - Insert: Add user data to the database if not exists.
-     - Update: Update user data on the database if exists.
+     - Insert: Add user_role data to the database if not exists.
+     - Update: Update user_role data on the database if exists.
     """
 
     __tablename__ = cfg_db.user_auth_table
@@ -90,14 +90,14 @@ class UsersAuthModel(Base):
                 )
             )
 
-    # Transaction to looking for a user on db to authenticate
+    # Transaction to looking for a user_role on db to authenticate
     def check_if_row_exists(self, session, data):
         r"""
-        Looking for a user by name on the database to valid authentication.
+        Looking for a user_role by name on the database to valid authentication.
 
         :param session: The session of the database.
         :param data: The data of User model to valid authentication on the API.
-        :return row_exists: Statement data row to valid if the user name exists to authenticate the API.
+        :return row_exists: Statement data row to valid if the user_role name exists to authenticate the API.
         """
 
         row_exists = None
@@ -134,7 +134,7 @@ class UsersAuthModel(Base):
 
     def insert_data(self, session, data):
         r"""
-        Looking for a user by name on the database to valid authentication.
+        Looking for a user_role by name on the database to valid authentication.
 
         :param session: The session of the database.
         :param data: The data of User model to valid authentication on the API.
@@ -199,12 +199,12 @@ class UsersAuthModel(Base):
 
         return endpoint_response
 
-    # Transaction to update user' password  hashed on db to authenticate - PATCH
+    # Transaction to update user_role' password  hashed on db to authenticate - PATCH
     def user_update_password(self, session, data):
         r"""
-        Transaction to update password hashed of a user to authenticate on the API correctly.
+        Transaction to update password hashed of a user_role to authenticate on the API correctly.
 
-        :param session: The user name to update password hashed.
+        :param session: The user_role name to update password hashed.
         :param data: The password hashed to authenticate on the API.
         """
 

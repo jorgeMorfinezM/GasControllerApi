@@ -28,8 +28,6 @@ import json
 import logging
 from datetime import datetime
 from pytz import timezone
-from apps.vehicle.VehicleModel import VehicleModel
-from apps.user_role.UserRoleModel import UserRoleModel
 from sqlalchemy_filters import apply_filters
 from sqlalchemy import Column, Numeric, Integer, String, Date, Time, Sequence
 from db_controller.database_backend import *
@@ -37,10 +35,10 @@ from db_controller import mvc_exceptions as mvc_exc
 
 cfg_db = get_config_settings_db()
 
-DRIVER_ID_SEQ = Sequence('driver_seq')  # define sequence explicitly
+USER_ROLE_ID_SEQ = Sequence('user_role_seq')  # define sequence explicitly
 
 
-class DriverModel(Base):
+class UserRoleModel(Base):
     r"""
     Class to instance the data of DriverModel on the database.
     Transactions:
@@ -50,50 +48,16 @@ class DriverModel(Base):
      - Select:
     """
 
-    __tablename__ = cfg_db.gas_driver_table.__str__()
+    __tablename__ = cfg_db.gas_user_role_table.__str__()
 
-    driver_id = Column(cfg_db.GasDriver.driver_id, Integer, DRIVER_ID_SEQ,
-                       primary_key=True, server_default=DRIVER_ID_SEQ.next_value())
-    driver_name = Column(cfg_db.GasDriver.driver_name, String, nullable=False, index=True)
-    driver_last_name = Column(cfg_db.GasDriver.driver_lastname1, String, nullable=False)
-    driver_last_name_last = Column(cfg_db.GasDriver.driver_lastname2, String, nullable=True)
-    driver_address = Column(cfg_db.GasDriver.driver_address, String, nullable=True)
-    driver_registered = Column(cfg_db.GasDriver.driver_date_assignment, Date, nullable=False, index=True)
-    driver_status = Column(cfg_db.GasDriver.driver_status, String, nullable=False, index=True)
-    last_update_date = Column('last_update_date', Date, nullable=True)
-
-    vehicle_assignment = Column(
-        cfg_db.GasDriver.driver_vehicle_id,
-        Integer,
-        ForeignKey('VehicleModel.vehicle_id', onupdate='CASCADE', ondelete='CASCADE'),
-        nullable=True,
-        unique=True
-        # no need to add index=True, all FKs have indexes
-    )
-
-    vehicle = relationship(VehicleModel,
-                           backref=cfg_db.gas_vehicle_table.__str__())
-
-    role_user = Column(
-        cfg_db.GasDriver.driver_role_id,
-        Integer,
-        ForeignKey('UserRoleModel.user_rol_id', onupdate='CASCADE', ondelete='CASCADE'),
-        nullable=False,
-        unique=True
-    )
-
-    driver_role = relationship(UserRoleModel,
-                               backref=cfg_db.gas_user_role_table)
+    user_role_id = Column(cfg_db.UserRole.user_role_id, Integer, USER_ROLE_ID_SEQ,
+                          primary_key=True, server_default=USER_ROLE_ID_SEQ.next_value())
+    user_role_name = Column(cfg_db.UserRole.user_role_name, String, nullable=False)
+    user_role_status = Column(cfg_db.UserRole.user_role_status, String, nullable=False)
 
     def __init__(self, data_driver):
-        self.driver_name = data_driver.get('nombre_conductor')
-        self.driver_last_name = data_driver.get('apellido_paterno_conductor')
-        self.driver_last_name_last = data_driver.get('apellido_materno_conductor')
-        self.driver_address = data_driver.get('domicilio_conductor')
-        self.driver_status = data_driver.get('estatus_conductor')
-        # self.driver_registered = get_current_date(session)
-        self.vehicle_assignment = data_driver.get('vehiculo')
-        self.role_user = data_driver.get('rol_usuario')
+        self.user_role_name = data_driver.get('nombre_rol')
+        self.user_role_status = data_driver.get('estatus_rol')
 
     def check_if_row_exists(self, session, data):
         """
@@ -107,11 +71,11 @@ class DriverModel(Base):
         row_exists = None
         id_driver = 0
 
-        if 'activo' in data.get('estatus_conductor').lower():
+        if 'activo' in data.get('estatus_rol').lower():
 
             try:
                 # for example to check if the insert on db is correct
-                row_driver = self.get_driver_id(session, data)
+                row_driver = self.get_role_id(session, data)
 
                 if row_driver is not None:
                     id_driver = row_driver.driver_id
@@ -163,7 +127,7 @@ class DriverModel(Base):
 
                 session.add(new_row)
 
-                row_driver = self.get_driver_id(session, data)
+                row_driver = self.get_role_id(session, data)
 
                 logger.info('Driver ID Inserted: %s', str(row_driver.driver_id))
 
@@ -172,40 +136,20 @@ class DriverModel(Base):
                 data['driver_id'] = row_driver.driver_id
 
                 # check insert correct
-                row_inserted = self.get_one_driver(session, data)
+                row_inserted = self.get_one_role(session, data)
 
                 logger.info('Data Driver inserted: %s, Original Data: {}'.format(data), str(row_inserted))
 
                 if row_inserted:
-
-                    row_vehicle = session.query(VehicleModel).filter(
-                        VehicleModel.vehicle_id == row_inserted.vehicle_assignment).one()
-
-                    vehicle_plate = None
-                    vehicle_manufacturer = None
-                    vehicle_model = None
-                    vehicle_brand = None
-
-                    if row_vehicle:
-                        vehicle_manufacturer = row_vehicle.vehicle_manufacturer
-                        vehicle_model = row_vehicle.vehicle_model
-                        vehicle_brand = row_vehicle.vehicle_brand
-                        vehicle_plate = row_vehicle.vehicle_plate
-
                     endpoint_response = json.dumps({
                         "id_driver": row_inserted.driver_id,
                         "name_driver": row_inserted.driver_name,
                         "lastname_driver": row_inserted.driver_last_name,
                         "lastname_last_driver": row_inserted.driver_last_name_last,
                         "address_driver": row_inserted.driver_address,
-                        "driver_added_date": str(row_inserted.driver_registered),
+                        "driver_added_date": row_inserted.driver_registered,
                         "status_driver": row_inserted.driver_status,
-                        "vehicle_driver": vehicle_plate,
-                        "vehicle_manufacturer": vehicle_manufacturer,
-                        "vehicle_model": vehicle_model,
-                        "vehicle_brand": vehicle_brand,
-                        "role_driver": row_inserted.role_user,
-
+                        "vehicle_driver": row_inserted.vehicle_assignment
                     })
 
             except SQLAlchemyError as exc:
@@ -238,7 +182,7 @@ class DriverModel(Base):
 
             try:
 
-                row_driver = self.get_driver_id(session, data)
+                row_driver = self.get_role_id(session, data)
 
                 if row_driver is not None:
                     id_driver = row_driver.driver_id
@@ -262,33 +206,18 @@ class DriverModel(Base):
                             "driver_registered": data.get('domicilio_conductor'),
                             "driver_status": data.get('estatus_conductor'),
                             "vehicle_assignment": data.get('vehiculo'),
-                            "role_user": data.get('rol_usuario'),
                             "last_update_date": data.get('last_update_date')},
                            synchronize_session='fetch')
 
                 session.flush()
 
                 # check update correct
-                row_updated = self.get_one_driver(session, data)
+                row_updated = self.get_one_role(session, data)
 
                 logger.info('Data Updated: %s', str(row_updated))
 
                 if row_updated:
                     logger.info('Data Driver updated')
-
-                    row_vehicle = session.query(VehicleModel).filter(
-                        VehicleModel.vehicle_id == row_updated.vehicle_assignment).one()
-
-                    vehicle_plate = None
-                    vehicle_manufacturer = None
-                    vehicle_model = None
-                    vehicle_brand = None
-
-                    if row_vehicle:
-                        vehicle_manufacturer = row_vehicle.vehicle_manufacturer
-                        vehicle_model = row_vehicle.vehicle_model
-                        vehicle_brand = row_vehicle.vehicle_brand
-                        vehicle_plate = row_vehicle.vehicle_plate
 
                     endpoint_response = json.dumps({
                         "id_driver": row_updated.driver_id,
@@ -298,11 +227,7 @@ class DriverModel(Base):
                         "address_driver": row_updated.driver_address,
                         "driver_added_date": str(row_updated.driver_registered),
                         "status_driver": row_updated.driver_status,
-                        "vehicle_driver": vehicle_plate,
-                        "vehicle_manufacturer": vehicle_manufacturer,
-                        "vehicle_model": vehicle_model,
-                        "vehicle_brand": vehicle_brand,
-                        "role_driver": row_updated.role_user,
+                        "vehicle_driver": row_updated.vehicle_assignment,
                         "last_date_updated": str(row_updated.last_update_date)
                     })
 
@@ -339,7 +264,7 @@ class DriverModel(Base):
 
                 try:
 
-                    row_driver = self.get_driver_id(session, data)
+                    row_driver = self.get_role_id(session, data)
 
                     if row_driver is not None:
                         id_driver = row_driver.driver_id
@@ -350,36 +275,17 @@ class DriverModel(Base):
 
                     data['driver_id'] = id_driver
 
-                    self.last_update_date = get_current_date(session)
-
-                    data['last_update_date'] = self.last_update_date
-
                     session.query(DriverModel).filter(DriverModel.driver_id == id_driver).\
-                        update({"driver_status": "INACTIVO",
-                                "last_update_date": data.get('last_update_date')},
+                        update({"driver_status": "INACTIVO"},
                                synchronize_session='fetch')
 
                     session.flush()
 
                     # check update correct
-                    row_deleted = self.get_one_driver(session, data)
+                    row_deleted = self.get_one_role(session, data)
 
                     if row_deleted:
                         logger.info('Driver inactive')
-
-                        row_vehicle = session.query(VehicleModel).filter(
-                            VehicleModel.vehicle_id == row_deleted.vehicle_assignment).one()
-
-                        vehicle_plate = None
-                        vehicle_manufacturer = None
-                        vehicle_model = None
-                        vehicle_brand = None
-
-                        if row_vehicle:
-                            vehicle_manufacturer = row_vehicle.vehicle_manufacturer
-                            vehicle_model = row_vehicle.vehicle_model
-                            vehicle_brand = row_vehicle.vehicle_brand
-                            vehicle_plate = row_vehicle.vehicle_plate
 
                         endpoint_response = json.dumps({
                             "id_driver": row_deleted.driver_id,
@@ -389,11 +295,7 @@ class DriverModel(Base):
                             "address_driver": row_deleted.driver_address,
                             "driver_added_date": row_deleted.driver_registered,
                             "status_driver": row_deleted.driver_status,
-                            "vehicle_driver": vehicle_plate,
-                            "vehicle_manufacturer": vehicle_manufacturer,
-                            "vehicle_model": vehicle_model,
-                            "vehicle_brand": vehicle_brand,
-                            "last_date_updated": str(row_deleted.last_updated_date)
+                            "vehicle_driver": row_deleted.vehicle_assignment
                         })
 
                 except SQLAlchemyError as exc:
@@ -412,38 +314,31 @@ class DriverModel(Base):
         return endpoint_response
 
     @staticmethod
-    def get_driver_id(session, data):
+    def get_role_id(session, data):
         """
-        Get Driver object row registered on database to get the ID
+        Get Role object row registered on database to get the ID
 
         :param session: Database session object
         :param data: Dictionary with data to get row
-        :return: row_driver: The row on database registered
+        :return: row_role: The row on database registered
         """
 
-        row_driver = None
+        row_role = None
 
         try:
 
-            row_exists = session.query(DriverModel).filter(DriverModel.driver_name == data.get('nombre_conductor')).\
-                filter(DriverModel.driver_last_name == data.get('apellido_paterno_conductor')).scalar()
+            row_exists = session.query(UserRoleModel).filter(UserRoleModel.user_role_name == data.get('nombre_rol')).\
+                filter(UserRoleModel.user_role_status == data.get('estatus_rol')).scalar()
 
-            logger.info('Row Data Driver Exists on DB: %s', str(row_exists))
+            logger.info('Row Data Role Exists on DB: %s', str(row_exists))
 
             if row_exists:
 
-                row_driver = session.query(DriverModel).\
-                    filter(DriverModel.driver_name == data.get('nombre_conductor')).\
-                    filter(DriverModel.driver_last_name == data.get('apellido_paterno_conductor')).one()
+                row_role = session.query(UserRoleModel).\
+                    filter(UserRoleModel.user_role_name == data.get('nombre_rol')).\
+                    filter(UserRoleModel.user_role_status == data.get('estatus_rol')).one()
 
-                if 'vehiculo' in data.keys():
-
-                    row_driver = session.query(DriverModel). \
-                        filter(DriverModel.driver_name == data.get('nombre_conductor')). \
-                        filter(VehicleModel.vehicle_id == data.get('vehiculo')). \
-                        filter(DriverModel.driver_last_name == data.get('apellido_paterno_conductor')).one()
-
-                logger.info('Row ID Driver data from database object: {}'.format(str(row_driver)))
+                logger.info('Row ID Role data from database object: {}'.format(str(row_role)))
 
         except SQLAlchemyError as exc:
 
@@ -451,25 +346,25 @@ class DriverModel(Base):
                                                                                              str(exc.code)))
             raise mvc_exc.ItemNotStored(
                 'Can\'t read data: "{}" because it\'s not stored in "{}". Row empty: {}'.format(
-                    data.get('nombre_conductor'), DriverModel.__tablename__, str(str(exc.args) + ':' +
-                                                                                 str(exc.code))
+                    data.get('nombre_rol'), UserRoleModel.__tablename__, str(str(exc.args) + ':' +
+                                                                             str(exc.code))
                 )
             )
 
         finally:
             session.close()
 
-        return row_driver
+        return row_role
 
     @staticmethod
-    def get_one_driver(session, data):
+    def get_one_role(session, data):
         row = None
 
         try:
 
             if 'vehiculo' in data.keys():
 
-                row = session.query(DriverModel). \
+                row = session.query(UserRoleModel). \
                     filter(DriverModel.driver_id == data.get('driver_id')). \
                     filter(VehicleModel.vehicle_id == data.get('vehiculo')).one()
 
@@ -511,7 +406,7 @@ class DriverModel(Base):
         driver_row = None
 
         try:
-            driver_row = self.get_driver_id(session, data)
+            driver_row = self.get_role_id(session, data)
 
             logger.info('Driver Id: %s', str(driver_row.driver_id))
 
@@ -541,7 +436,7 @@ class DriverModel(Base):
         return estatus_conductor
 
     @staticmethod
-    def get_all_drivers(session):
+    def get_all_inversiones(session):
         """
         Get all Driver objects data registered on database.
 
@@ -563,21 +458,7 @@ class DriverModel(Base):
             registered_driver = driver.driver_registered
             status_driver = driver.driver_status
             assigment_vehicle = driver.vehicle_assignment
-            driver_role = driver.role_user
             last_updated_date = driver.last_update_date
-
-            row_vehicle = session.query(VehicleModel).filter(VehicleModel.vehicle_id == assigment_vehicle).one()
-
-            vehicle_plate = None
-            vehicle_manufacturer = None
-            vehicle_model = None
-            vehicle_brand = None
-
-            if row_vehicle:
-                vehicle_manufacturer = row_vehicle.vehicle_manufacturer
-                vehicle_model = row_vehicle.vehicle_model
-                vehicle_brand = row_vehicle.vehicle_brand
-                vehicle_plate = row_vehicle.vehicle_plate
 
             drivers_data += [{
                 "Driver": {
@@ -588,11 +469,7 @@ class DriverModel(Base):
                     "address_driver": address_driver,
                     "driver_added_date": str(registered_driver),
                     "status_driver": status_driver,
-                    "vehicle_driver": vehicle_plate,
-                    "vehicle_manufacturer": vehicle_manufacturer,
-                    "vehicle_model": vehicle_model,
-                    "vehicle_brand": vehicle_brand,
-                    "role_driver": driver_role,
+                    "vehicle_driver": assigment_vehicle,
                     "last_date_updated": str(last_updated_date)
                 }
             }]
@@ -600,66 +477,61 @@ class DriverModel(Base):
         return json.dumps(drivers_data)
 
     @staticmethod
-    def get_driver_by_filters(session, data, filter_spec=list):
-
-        row_vehicle = None
+    def get_inversiones_by_filters(session, filter_spec=list):
 
         query_result = None
-        drivers_data = []
+        inversiones_data = []
 
         if filter_spec is None:
-            query_result = session.query(DriverModel).all()
+            query_result = session.query(GinInversionesModel).all()
 
-        query = session.query(DriverModel)
-
-        if 'vehiculo_fabricante' in data.keys():
-            row_vehicle = session.query(VehicleModel).\
-                filter(VehicleModel.vehicle_manufacturer == data.get('vehiculo_fabricante')).one()
-
-        if row_vehicle:
-            filter_spec.append({'field': 'vehicle_assignment', 'op': '==', 'value': row_vehicle.vehicle_id})
+        query = session.query(GinInversionesModel)
 
         filtered_query = apply_filters(query, filter_spec)
         query_result = filtered_query.all()
 
         logger.info('Query filtered resultSet: %s', str(query_result))
 
-        for driver in query_result:
-            id_driver = driver.driver_id
-            name_driver = driver.driver_name
-            lastname_driver = driver.driver_last_name
-            lastname_last_driver = driver.driver_last_name_last
-            address_driver = driver.driver_address
-            registered_driver = driver.driver_registered
-            status_driver = driver.driver_status
-            vehicle_manufacturer = row_vehicle.vehicle_manufacturer
-            vehicle_model = row_vehicle.vehicle_model
-            vehicle_brand = row_vehicle.vehicle_brand
-            vehicle_plate = row_vehicle.vehicle_plate
-            driver_role = driver.role_user
-            last_updated_date = driver.last_update_date
+        for inversion in query_result:
+            inversion_id = inversion.invId
+            cuenta = inversion.cuenta
+            estatus = inversion.estatus
+            monto = inversion.monto
+            autorizacion = inversion.autorizacion
+            canal = inversion.canal
+            origen = inversion.origen
+            comisionistaId = inversion.comisionistaId
+            transaccionId = inversion.transaccionId
+            motivo = inversion.motivo
+            fechaRecepcion = inversion.fechaRecepcion
+            horaRecepcion = inversion.horaRecepcion
+            fechaAplicacion = inversion.fechaAplicacion
+            horaAplicacion = inversion.horaAplicacion
+            conciliacionId = inversion.conciliacionId
+            codigoBancario = inversion.codigoBancario
+            metodoDeposito = inversion.metodoDeposito
 
-            row_role = session.query(UserRoleModel).filter(UserRoleModel.user_role_id == int(driver_role)).one()
-
-            drivers_data += [{
-                "Driver": {
-                    "id_driver": id_driver,
-                    "name_driver": name_driver,
-                    "lastname_driver": lastname_driver,
-                    "lastname_last_driver": lastname_last_driver,
-                    "address_driver": address_driver,
-                    "driver_added_date": str(registered_driver),
-                    "status_driver": status_driver,
-                    "vehicle_driver": vehicle_plate,
-                    "vehicle_manufacturer": vehicle_manufacturer,
-                    "vehicle_model": vehicle_model,
-                    "vehicle_brand": vehicle_brand,
-                    "role_driver": row_role.user_role_name,
-                    "last_date_updated": str(last_updated_date)
-                }
+            inversiones_data += [{
+                "invId": inversion_id,
+                "cuenta": cuenta,
+                "estatus": estatus,
+                "monto": str(monto),
+                "autorizacion": autorizacion,
+                "canal": canal,
+                "origen": origen,
+                "comisionistaId": comisionistaId,
+                "transaccionId": transaccionId,
+                "motivo": motivo,
+                "fechaRecepcion": str(fechaRecepcion),
+                "horaRecepcion": str(horaRecepcion),
+                "fechaAplicacion": str(fechaAplicacion),
+                "horaAplicacion": str(horaAplicacion),
+                "conciliacionId": conciliacionId,
+                "codigoBancario": codigoBancario,
+                "metodoDeposito": metodoDeposito
             }]
 
-        return json.dumps(drivers_data)
+        return json.dumps(inversiones_data)
 
     def __repr__(self):
         return "<DriverModel(driver_id='%s', " \
@@ -670,9 +542,7 @@ class DriverModel(Base):
                "             driver_registered='%s', " \
                "             driver_status='%s', " \
                "             last_update_date='%s', " \
-               "             vehicle_assignment='%s', " \
-               "             role_user='%s')>" % (self.driver_id, self.driver_name, self.driver_last_name,
-                                                  self.driver_last_name_last, self.driver_address,
-                                                  self.driver_registered, self.driver_status,
-                                                  self.last_update_date, self.vehicle_assignment,
-                                                  self.role_user)
+               "             vehicle_assignment='%s')>" % (self.driver_id, self.driver_name, self.driver_last_name,
+                                                           self.driver_last_name_last, self.driver_address,
+                                                           self.driver_registered, self.driver_status,
+                                                           self.last_update_date, self.vehicle_assignment)

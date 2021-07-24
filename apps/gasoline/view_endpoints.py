@@ -13,7 +13,7 @@ __version__ = "1.21.G02.1 ($Rev: 2 $)"
 from flask import Blueprint, json, request
 # from flask_jwt_extended import jwt_required
 from db_controller.database_backend import *
-from .GinInversionesModel import GinInversionesModel
+from .GasonlineModel import GasolineModel
 from handler_controller.ResponsesHandler import ResponsesHandler as HandlerResponse
 from handler_controller.messages import SuccessMsg, ErrorMsg
 from logger_controller.logger_control import *
@@ -21,14 +21,14 @@ from utilities.Utility import *
 from datetime import datetime
 
 cfg_app = get_config_settings_app()
-inversiones_api = Blueprint('inversiones_api', __name__)
+gas_log_api = Blueprint('gas_log_api', __name__, url_prefix='/register')
 # jwt = JWTManager(bancos_api)
 logger = configure_logger('ws')
 
 
-@inversiones_api.route('/', methods=['POST', 'GET', 'DELETE'])
+@gas_log_api.route('/', methods=['POST', 'PUT', 'GET', 'DELETE'])
 # @jwt_required
-def endpoint_processing_inversiones_data():
+def endpoint_manage_gas_log_data():
     conn_db, session_db = init_db_connection()
 
     headers = request.headers
@@ -132,33 +132,33 @@ def endpoint_processing_inversiones_data():
 
         gin_inv_model = GinInversionesModel(data)
 
-        inversiones_on_db = gin_inv_model.get_inversiones_by_filters(session_db, filter_spec)
+        inversiones_on_db = gin_inv_model.get_driver_by_filters(session_db, filter_spec)
 
         if not bool(inversiones_on_db) or not inversiones_on_db or "[]" == inversiones_on_db:
             return HandlerResponse.resp_success(ErrorMsg.ERROR_DATA_NOT_FOUND, {})
 
         return HandlerResponse.resp_success(SuccessMsg.MSG_GET_RECORD, inversiones_on_db)
 
-    # elif request.method == 'PUT':
-    #
-    #     data = request.get_json(force=True)
-    #
-    #     gin_inv_model = GinInversionesModel(data)
-    #
-    #     if not data:
-    #         return HandlerResponse.request_conflict()
-    #
-    #     json_data = dict()
-    #
-    #     json_data = gin_inv_model.update_data(session_db, data)
-    #
-    #     logger.info('Bank updated Info: %s', str(json_data))
-    #
-    #     if not json_data:
-    #         return HandlerResponse.not_found()
-    #
-    #     return HandlerResponse.resp_success(json_data)
-    #
+    elif request.method == 'PUT':
+
+        data = request.get_json(force=True)
+
+        gin_inv_model = GinInversionesModel(data)
+
+        if not data:
+            return HandlerResponse.request_conflict()
+
+        json_data = dict()
+
+        json_data = gin_inv_model.update_data(session_db, data)
+
+        logger.info('Bank updated Info: %s', str(json_data))
+
+        if not json_data:
+            return HandlerResponse.not_found()
+
+        return HandlerResponse.resp_success(json_data)
+
     elif request.method == 'DELETE':
 
         data = dict()
@@ -200,3 +200,34 @@ def endpoint_processing_inversiones_data():
 
     else:
         return HandlerResponse.not_found(ErrorMsg.ERROR_REQUEST_NOT_FOUND)
+
+
+@gas_log_api.route('/filter', methods=['GET'])
+def get_looking_for_gas_log():
+    conn_db, session_db = init_db_connection()
+
+    headers = request.headers
+    auth = headers.get('Authorization')
+
+    if not auth and 'Bearer' not in auth:
+        return HandlerResponse.request_unauthorized(ErrorMsg.ERROR_REQUEST_UNAUTHORIZED, auth)
+    else:
+        data = dict()
+        json_token = dict()
+
+        if request.method == 'GET':
+            # To GET ALL Data of the Users:
+
+            users_on_db = None
+
+            user_model = UsersAuthModel(data)
+
+            users_on_db = user_model.get_all_users(session_db)
+
+            if not bool(users_on_db) or not users_on_db or "[]" == users_on_db:
+                return HandlerResponse.response_success(ErrorMsg.ERROR_DATA_NOT_FOUND, users_on_db)
+
+            return HandlerResponse.response_success(SuccessMsg.MSG_GET_RECORD, users_on_db)
+
+        else:
+            return HandlerResponse.request_not_found(ErrorMsg.ERROR_REQUEST_NOT_FOUND)

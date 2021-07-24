@@ -28,6 +28,8 @@ import json
 import logging
 from datetime import datetime
 from pytz import timezone
+from apps.driver.DriverModel import DriverModel
+from apps.vehicle.VehicleModel import VehicleModel
 from sqlalchemy_filters import apply_filters
 from sqlalchemy import Column, Numeric, Integer, String, Date, Time, Sequence
 from db_controller.database_backend import *
@@ -35,10 +37,10 @@ from db_controller import mvc_exceptions as mvc_exc
 
 cfg_db = get_config_settings_db()
 
-USER_ROLE_ID_SEQ = Sequence('user_role_seq')  # define sequence explicitly
+GAS_LOG_ID_SEQ = Sequence('gasoline_log_seq')  # define sequence explicitly
 
 
-class UserRoleModel(Base):
+class GasolineModel(Base):
     r"""
     Class to instance the data of DriverModel on the database.
     Transactions:
@@ -48,16 +50,63 @@ class UserRoleModel(Base):
      - Select:
     """
 
-    __tablename__ = cfg_db.gas_user_role_table.__str__()
+    __tablename__ = cfg_db.gas_manager_vehicle_table.__str__()
 
-    user_role_id = Column(cfg_db.UserRole.user_role_id, Integer, USER_ROLE_ID_SEQ,
-                          primary_key=True, server_default=USER_ROLE_ID_SEQ.next_value())
-    user_role_name = Column(cfg_db.UserRole.user_role_name, String, nullable=False)
-    user_role_status = Column(cfg_db.UserRole.user_role_status, String, nullable=False)
+    gas_registro_id = int()  # GASOLINA_REGISTRO_ID
+    gas_registro_date = str()  # GASOLINA_REGISTRO_FECHA
+    gas_registro_hour = str()  # GASOLINA_REGISTRO_HORA
+    gas_registro_liters = float()  # GASOLINA_REGISTRO_LITROS
+    gas_registro_cost = float()  # GASOLINA_REGISTRO_COSTO
+    gas_registro_tax_rate = int()  # GASOLINA_REGISTRO_IMPUESTO
+    gas_registro_unit_cost = float()  # GASOLINA_REGISTRO_UNIT_COST
+    gas_gasolinera_name = str()  # GASOLINA_NOMBRE_GASOLINERA
+    gas_gasolinera_address = str()  # GASOLINA_UBICACION_GASOLINERA
+    gas_driver_id = int()  # GASOLINA_CONDUCTOR_ID
+    gas_vehicle_id = int()  # GASOLINA_VEHICULO_ID
+    gas_document_id = int()  # GASSOLINA_DOCUMENTO_ID
+
+    driver_id = Column(cfg_db.GasDriver.driver_id, Integer, GAS_LOG_ID_SEQ,
+                       primary_key=True, server_default=GAS_LOG_ID_SEQ.next_value())
+    driver_name = Column(cfg_db.GasDriver.driver_name, String, nullable=False)
+    driver_last_name = Column(cfg_db.GasDriver.driver_lastname1, String, nullable=False)
+    driver_last_name_last = Column(cfg_db.GasDriver.driver_lastname2, String, nullable=True)
+    driver_address = Column(cfg_db.GasDriver.driver_address, String, nullable=True)
+    driver_registered = Column(cfg_db.GasDriver.driver_date_assignment, Date, nullable=False)
+    driver_status = Column(cfg_db.GasDriver.driver_status, String, nullable=False)
+    last_update_date = Column('last_update_date', Date, nullable=True)
+
+    vehicle_assignment = Column(
+        cfg_db.GasDriver.driver_vehicle_id,
+        Integer,
+        ForeignKey('VehicleModel.vehicle_id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=True,
+        unique=True
+        # no need to add index=True, all FKs have indexes
+    )
+
+    vehicle = relationship(VehicleModel,
+                           backref=cfg_db.gas_vehicle_table.__str__())
+
+    role_user = Column(
+        cfg_db.GasDriver.driver_role_id,
+        Integer,
+        ForeignKey('UserRoleModel.user_rol_id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+        unique=True
+    )
+
+    driver_role = relationship(UserRoleModel,
+                               backref=cfg_db.gas_user_role_table)
 
     def __init__(self, data_driver):
-        self.user_role_name = data_driver.get('nombre_rol')
-        self.user_role_status = data_driver.get('estatus_rol')
+        self.driver_name = data_driver.get('nombre_conductor')
+        self.driver_last_name = data_driver.get('apellido_paterno_conductor')
+        self.driver_last_name_last = data_driver.get('apellido_materno_conductor')
+        self.driver_address = data_driver.get('domicilio_conductor')
+        self.driver_status = data_driver.get('estatus_conductor')
+        # self.driver_registered = get_current_date(session)
+        self.vehicle_assignment = data_driver.get('vehiculo')
+        self.role_user = data_driver.get('rol_usuario')
 
     def check_if_row_exists(self, session, data):
         """
@@ -84,7 +133,7 @@ class UserRoleModel(Base):
 
                 logger.info('Driver Row object in DB: %s', str(id_driver))
 
-                row_exists = session.query(DriverModel).filter(DriverModel.driver_id == id_driver).scalar()
+                row_exists = session.query(GasolineModel).filter(GasolineModel.driver_id == id_driver).scalar()
 
                 logger.info('Row to data: {}, Exists: %s'.format(data), str(row_exists))
 
@@ -121,7 +170,7 @@ class UserRoleModel(Base):
 
                 data['driver_registered'] = self.driver_registered
 
-                new_row = DriverModel(data)
+                new_row = GasolineModel(data)
 
                 logger.info('New Row Driver: %s', str(new_row.driver_name))
 
@@ -198,7 +247,7 @@ class UserRoleModel(Base):
                 data['driver_id'] = id_driver
 
                 # update row to database
-                session.query(DriverModel).filter(DriverModel.driver_id == id_driver).\
+                session.query(GasolineModel).filter(GasolineModel.driver_id == id_driver).\
                     update({"driver_name": data.get('nombre_conductor'),
                             "driver_last_name": data.get('apellido_paterno_conductor'),
                             "driver_last_name_last": data.get('apellido_materno_conductor'),
@@ -206,6 +255,7 @@ class UserRoleModel(Base):
                             "driver_registered": data.get('domicilio_conductor'),
                             "driver_status": data.get('estatus_conductor'),
                             "vehicle_assignment": data.get('vehiculo'),
+                            "role_user": data.get('rol_usuario'),
                             "last_update_date": data.get('last_update_date')},
                            synchronize_session='fetch')
 
@@ -228,6 +278,7 @@ class UserRoleModel(Base):
                         "driver_added_date": str(row_updated.driver_registered),
                         "status_driver": row_updated.driver_status,
                         "vehicle_driver": row_updated.vehicle_assignment,
+                        "role_driver": row_updated.role_user,
                         "last_date_updated": str(row_updated.last_update_date)
                     })
 
@@ -275,7 +326,7 @@ class UserRoleModel(Base):
 
                     data['driver_id'] = id_driver
 
-                    session.query(DriverModel).filter(DriverModel.driver_id == id_driver).\
+                    session.query(GasolineModel).filter(GasolineModel.driver_id == id_driver).\
                         update({"driver_status": "INACTIVO"},
                                synchronize_session='fetch')
 
@@ -327,23 +378,23 @@ class UserRoleModel(Base):
 
         try:
 
-            row_exists = session.query(DriverModel).filter(DriverModel.driver_name == data.get('nombre_conductor')).\
-                filter(DriverModel.driver_last_name == data.get('apellido_paterno_conductor')).scalar()
+            row_exists = session.query(GasolineModel).filter(GasolineModel.driver_name == data.get('nombre_conductor')).\
+                filter(GasolineModel.driver_last_name == data.get('apellido_paterno_conductor')).scalar()
 
             logger.info('Row Data Driver Exists on DB: %s', str(row_exists))
 
             if row_exists:
 
-                row_driver = session.query(DriverModel).\
-                    filter(DriverModel.driver_name == data.get('nombre_conductor')).\
-                    filter(DriverModel.driver_last_name == data.get('apellido_paterno_conductor')).one()
+                row_driver = session.query(GasolineModel).\
+                    filter(GasolineModel.driver_name == data.get('nombre_conductor')).\
+                    filter(GasolineModel.driver_last_name == data.get('apellido_paterno_conductor')).one()
 
                 if 'vehiculo' in data.keys():
 
-                    row_driver = session.query(DriverModel). \
-                        filter(DriverModel.driver_name == data.get('nombre_conductor')). \
+                    row_driver = session.query(GasolineModel). \
+                        filter(GasolineModel.driver_name == data.get('nombre_conductor')). \
                         filter(VehicleModel.vehicle_id == data.get('vehiculo')). \
-                        filter(DriverModel.driver_last_name == data.get('apellido_paterno_conductor')).one()
+                        filter(GasolineModel.driver_last_name == data.get('apellido_paterno_conductor')).one()
 
                 logger.info('Row ID Driver data from database object: {}'.format(str(row_driver)))
 
@@ -353,8 +404,8 @@ class UserRoleModel(Base):
                                                                                              str(exc.code)))
             raise mvc_exc.ItemNotStored(
                 'Can\'t read data: "{}" because it\'s not stored in "{}". Row empty: {}'.format(
-                    data.get('nombre_conductor'), DriverModel.__tablename__, str(str(exc.args) + ':' +
-                                                                                 str(exc.code))
+                    data.get('nombre_conductor'), GasolineModel.__tablename__, str(str(exc.args) + ':' +
+                                                                                   str(exc.code))
                 )
             )
 
@@ -371,12 +422,12 @@ class UserRoleModel(Base):
 
             if 'vehiculo' in data.keys():
 
-                row = session.query(DriverModel). \
-                    filter(DriverModel.driver_id == data.get('driver_id')). \
+                row = session.query(GasolineModel). \
+                    filter(GasolineModel.driver_id == data.get('driver_id')). \
                     filter(VehicleModel.vehicle_id == data.get('vehiculo')).one()
 
-            row = session.query(DriverModel).filter(DriverModel.driver_id == data.get('driver_id')).\
-                filter(DriverModel.driver_name == data.get('nombre_conductor')).one()
+            row = session.query(GasolineModel).filter(GasolineModel.driver_id == data.get('driver_id')).\
+                filter(GasolineModel.driver_name == data.get('nombre_conductor')).one()
 
             if row:
                 logger.info('Data Driver on Db: %s',
@@ -391,7 +442,7 @@ class UserRoleModel(Base):
 
             raise mvc_exc.ItemNotStored(
                 'Can\'t read data: "{}" because it\'s not stored in "{}". Row empty: {}'.format(
-                    data.get('nombre_conductor'), DriverModel.__tablename__, str(str(exc.args) + ':' + str(exc.code))
+                    data.get('nombre_conductor'), GasolineModel.__tablename__, str(str(exc.args) + ':' + str(exc.code))
                 )
             )
 
@@ -419,7 +470,7 @@ class UserRoleModel(Base):
 
             if driver_row:
 
-                row = session.query(DriverModel).filter(DriverModel.driver_id == driver_row.driver_id).one()
+                row = session.query(GasolineModel).filter(GasolineModel.driver_id == driver_row.driver_id).one()
 
                 if row:
                     estatus_conductor = row.driver_status
@@ -433,7 +484,7 @@ class UserRoleModel(Base):
 
             raise mvc_exc.ItemNotStored(
                 'Can\'t read data: "{}" because it\'s not stored in "{}". Row empty: {}'.format(
-                    data.get('nombre_conductor'), DriverModel.__tablename__, str(str(exc.args) + ':' + str(exc.code))
+                    data.get('nombre_conductor'), GasolineModel.__tablename__, str(str(exc.args) + ':' + str(exc.code))
                 )
             )
 
@@ -443,7 +494,7 @@ class UserRoleModel(Base):
         return estatus_conductor
 
     @staticmethod
-    def get_all_inversiones(session):
+    def get_all_drivers(session):
         """
         Get all Driver objects data registered on database.
 
@@ -454,7 +505,7 @@ class UserRoleModel(Base):
         all_drivers = None
         drivers_data = []
 
-        all_drivers = session.query(DriverModel).all()
+        all_drivers = session.query(GasolineModel).all()
 
         for driver in all_drivers:
             id_driver = driver.driver_id
@@ -549,7 +600,9 @@ class UserRoleModel(Base):
                "             driver_registered='%s', " \
                "             driver_status='%s', " \
                "             last_update_date='%s', " \
-               "             vehicle_assignment='%s')>" % (self.driver_id, self.driver_name, self.driver_last_name,
-                                                           self.driver_last_name_last, self.driver_address,
-                                                           self.driver_registered, self.driver_status,
-                                                           self.last_update_date, self.vehicle_assignment)
+               "             vehicle_assignment='%s', " \
+               "             role_user='%s')>" % (self.driver_id, self.driver_name, self.driver_last_name,
+                                                  self.driver_last_name_last, self.driver_address,
+                                                  self.driver_registered, self.driver_status,
+                                                  self.last_update_date, self.vehicle_assignment,
+                                                  self.role_user)
